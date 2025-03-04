@@ -11,12 +11,6 @@
 #include <unistd.h>
 #include <string.h>
 
-struct timeVal
-{
-    time_t tv_sec; // seconds
-    long tv_usec;  // microseconds
-};
-
 char *timedReadLine(int timeout)
 {
     static char buffer[512];
