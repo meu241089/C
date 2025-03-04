@@ -14,16 +14,16 @@
 
 int main()
 {
-    int s;
+    int server;
     struct sockaddr_in sock;
     char buffer[512];
     const char *data;
 
     data = "HEAD / HTTP/1.0\r\n\r\n";
 
-    s = socket(AF_INET, SOCK_STREAM, 0);
+    server = socket(AF_INET, SOCK_STREAM, 0);
 
-    if (s < 0)
+    if (server < 0)
     {
         printf("socket() error\n");
         return -1;
@@ -33,19 +33,19 @@ int main()
     sock.sin_port = htons(PORT);
     sock.sin_family = AF_INET;
 
-    if (connect(s, (struct sockaddr *)&sock, sizeof(struct sockaddr_in)) != 0)
+    if (connect(server, (struct sockaddr *)&sock, sizeof(struct sockaddr_in)) != 0)
     {
         printf("connect() error\n");
-        close(s);
+        close(server);
 
         return -1;
     }
 
-    write(s, data, strlen(data));
+    write(server, data, strlen(data));
     memset(buffer, 0, 512);
 
-    read(s, buffer, 511);
-    close(s);
+    read(server, buffer, 511);
+    close(server);
 
     printf("\n%s\n", buffer);
 
