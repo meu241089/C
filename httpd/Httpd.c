@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define ListenAddress "0.0.0.0"
-#define ListenAddress "127.0.0.1"
+#define ListenAddress "0.0.0.0"
+#//define ListenAddress "127.0.0.1"
 
 /* global */
 char *error; // static text wich is saved in a special part of the memory called BSS and it's available for all functions
@@ -25,7 +25,7 @@ int ServerInit(int portNumber)
 
     if (sock < 0) // value = -1 equals an error
     {
-        error = "socket() error";
+        error = "socket() error"; 
         return 0;
     }
 
@@ -50,9 +50,32 @@ int ServerInit(int portNumber)
     return sock;
 }
 
+/* returns 0 on error, or returns the new client's socket file descriptor */
+int ClientAccept(int socketFileDescriptor)
+{
+    int c;
+    socklen_t addressLength;
+    struct sockaddr_in cli;
+
+    memset(&cli, 0, sizeof(cli));
+    c = accept(socketFileDescriptor, (struct sockaddr *)&cli, &addressLength);
+
+    if (c < 0)
+    {
+        error = "accept() error";
+        return 0;
+    }
+    return 0;
+}
+
+void ClientConnection(int s, int c)
+{
+    return;
+}
+
 int main(int argc, char *argv[])
 {
-    int socketFileDescriptor;
+    int socketFileDescriptor, client;
     char *portNumber;
 
     if (argc < 2)
@@ -73,8 +96,31 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-     while(1)
-     {
-        
-     }
+    printf("Listening on %s:%s\n", ListenAddress, portNumber);
+
+    while (1)
+    {
+        client = ClientAccept(socketFileDescriptor);
+        if (!client)
+        {
+            fprintf(stderr, "%s\n", error);
+            continue;
+        }
+
+        printf("Incoming connection\n");
+
+        if (!fork())
+        {
+            ClientConnection(socketFileDescriptor, client);
+        }
+
+        /*fork does create a copy of your program so it runs in two instances from here on and forward
+
+        for the main process: return the new process id
+
+        for the new process: return 0
+
+        */
+    }
+    return -1;
 }
