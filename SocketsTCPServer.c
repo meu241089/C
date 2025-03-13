@@ -13,7 +13,7 @@
 
 int main()
 {
-    int server, client;
+    int server, client, nByteReads;
     socklen_t addressLen;
     struct sockaddr_in srv, cli;
     char buffer[512];
@@ -60,9 +60,11 @@ int main()
     }
 
     printf("Client connected\n");
-    read(client, buffer, 512);
+    nByteReads = read(client, buffer, 512);
     data = "http v1.0\n";
+
     write(client, data, strlen(data));
+    write(1, buffer, nByteReads);
 
     close(client);
     close(server);
@@ -73,6 +75,6 @@ int main()
 // dopo averlo avviato, per verificare se effettivamente è in ascolto (listening), digitare dal terminale:
 // sudo netstat -an | grep LISTEN
 
-//e
+// e
 
 // sudo env - telnet localhost

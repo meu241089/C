@@ -9,11 +9,21 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ListenAddress "0.0.0.0"
-#//define ListenAddress "127.0.0.1"
+// #define ListenAddress "0.0.0.0"
+#define ListenAddress "127.0.0.1"
 
 /* global */
 char *error; // static text wich is saved in a special part of the memory called BSS and it's available for all functions
+
+/* structures */
+
+struct structHttpRequest
+{
+    char method[8];
+    char url[128];
+};
+
+typedef struct structHttpRequest httpReq;
 
 /*returns 0 on error, or it return a socked fd*/
 int ServerInit(int portNumber)
@@ -25,7 +35,7 @@ int ServerInit(int portNumber)
 
     if (sock < 0) // value = -1 equals an error
     {
-        error = "socket() error"; 
+        error = "socket() error";
         return 0;
     }
 
@@ -68,8 +78,14 @@ int ClientAccept(int socketFileDescriptor)
     return 0;
 }
 
-void ClientConnection(int s, int c)
+/* returns 0 on error, or it returns a httpreq structure*/
+httpReq *ParseHttp(char *str)
 {
+}
+
+void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescriptor)
+{
+
     return;
 }
 
@@ -77,6 +93,22 @@ int main(int argc, char *argv[])
 {
     int socketFileDescriptor, client;
     char *portNumber;
+    char *template;
+    httpReq *req;
+
+    template = "GET / HTTP/1.1\n"
+               "Host : 127.0.0.1 : 8181\n"
+               "Upgrade-Insecure-Requests: 1\n"
+               "User - Agent : Mozilla / 5.0(X11; Ubuntu; Linux x86_64; rv : 136.0)Gecko / 20100101 Firefox / 136.0 \n"
+               "Accept : text / html, application / xhtml + xml, application / xml; q = 0.9, * /*;q=0.8\n"
+               "Accept-Language: it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3\n"
+               "Accept-Encoding: gzip, deflate, br, zstd\n"
+               "Connection: keep-alive\n"
+               "\n";
+
+    req = ParseHttp(template);
+
+    printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
 
     if (argc < 2)
     {
