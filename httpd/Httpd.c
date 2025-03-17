@@ -81,6 +81,36 @@ int ClientAccept(int socketFileDescriptor)
 /* returns 0 on error, or it returns a httpreq structure*/
 httpReq *ParseHttp(char *str)
 {
+    httpReq *req;
+    char *pointer;
+
+    req = malloc(sizeof(httpReq));
+    // memset(&req, 0, sizeof(httpReq)); ERRORE
+
+    printf("%d\n", sizeof(httpReq));
+
+    printf("'%s'\n", str);
+
+    for (pointer = str; *pointer && *pointer != ' '; pointer++)
+    {
+        printf("%c", *pointer);
+        fflush(stdout);
+    }
+
+    if (*pointer == ' ')
+    {
+        *pointer = 0;
+    }
+    else
+    {
+        fflush(stdout);
+        error = "parseHttp() NOSPACE error";
+        // free(req);
+        return 0;
+    }
+
+    strncpy(req->method, str, 7); // method [8]
+    return req;
 }
 
 void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescriptor)
@@ -95,6 +125,7 @@ int main(int argc, char *argv[])
     char *portNumber;
     char *template;
     httpReq *req;
+    char buffer[512];
 
     template = "GET / HTTP/1.1\n"
                "Host : 127.0.0.1 : 8181\n"
@@ -106,9 +137,21 @@ int main(int argc, char *argv[])
                "Connection: keep-alive\n"
                "\n";
 
-    req = ParseHttp(template);
+    memset(buffer, 0, 512);
+    strncpy(buffer, template, 511);
 
-    printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
+    printf("X '%s'\n", buffer);
+
+    req = ParseHttp(buffer);
+
+    if (!req)
+        fprintf(stderr, "%s\n", error);
+    else
+        printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
+
+    // free(req);
+
+    return 0;
 
     if (argc < 2)
     {
