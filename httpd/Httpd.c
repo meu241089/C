@@ -87,29 +87,35 @@ httpReq *ParseHttp(char *str)
     req = malloc(sizeof(httpReq));
     // memset(&req, 0, sizeof(httpReq)); ERRORE
 
-    printf("%d\n", sizeof(httpReq));
-
-    printf("'%s'\n", str);
-
     for (pointer = str; *pointer && *pointer != ' '; pointer++)
-    {
-        printf("%c", *pointer);
-        fflush(stdout);
-    }
-
+        ;
     if (*pointer == ' ')
     {
         *pointer = 0;
     }
     else
     {
-        fflush(stdout);
         error = "parseHttp() NOSPACE error";
-        // free(req);
+        free(req);
         return 0;
     }
 
     strncpy(req->method, str, 7); // method [8]
+
+    for (str = ++pointer; *pointer && *pointer != ' '; pointer++)
+        ;
+    if (*pointer == ' ')
+    {
+        *pointer = 0;
+    }
+    else
+    {
+        error = "parseHttp() 2ND SPACE error";
+        free(req);
+        return 0;
+    }
+
+    strncpy(req->url, str, 127); // url [128]
     return req;
 }
 
@@ -127,7 +133,7 @@ int main(int argc, char *argv[])
     httpReq *req;
     char buffer[512];
 
-    template = "GET / HTTP/1.1\n"
+    template = "GET /Ciaone HTTP/1.1\n"
                "Host : 127.0.0.1 : 8181\n"
                "Upgrade-Insecure-Requests: 1\n"
                "User - Agent : Mozilla / 5.0(X11; Ubuntu; Linux x86_64; rv : 136.0)Gecko / 20100101 Firefox / 136.0 \n"
@@ -140,8 +146,6 @@ int main(int argc, char *argv[])
     memset(buffer, 0, 512);
     strncpy(buffer, template, 511);
 
-    printf("X '%s'\n", buffer);
-
     req = ParseHttp(buffer);
 
     if (!req)
@@ -149,7 +153,7 @@ int main(int argc, char *argv[])
     else
         printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
 
-    // free(req);
+    free(req);
 
     return 0;
 
