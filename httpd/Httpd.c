@@ -67,7 +67,10 @@ int ClientAccept(int socketFileDescriptor)
     socklen_t addressLength;
     struct sockaddr_in cli;
 
+    addressLength = 0;
+
     memset(&cli, 0, sizeof(cli));
+
     c = accept(socketFileDescriptor, (struct sockaddr *)&cli, &addressLength);
 
     if (c < 0)
@@ -75,7 +78,7 @@ int ClientAccept(int socketFileDescriptor)
         error = "accept() error";
         return 0;
     }
-    return 0;
+    return c;
 }
 
 /* returns 0 on error, or it returns a httpreq structure*/
@@ -119,43 +122,87 @@ httpReq *ParseHttp(char *str)
     return req;
 }
 
+/* return 0 on error, or return the data */
+char *ClientRead(int clientSocketFileDescriptor)
+{
+    static char buffer[512];
+
+    memset(buffer, 0, 512);
+
+    if (read(clientSocketFileDescriptor, buffer, 511) < 0)
+    {
+        error = "read() error";
+        return 0;
+    }
+    else
+    {
+        return buffer;
+    }
+}
+
 void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescriptor)
 {
+    httpReq *req;
+    char buffer[512];
+    char *pointer;
+
+    pointer = ClientRead(clientSocketFileDescriptor);
+
+    if (!pointer)
+    {
+        fprintf(stderr, "%s\n", error);
+        close(clientSocketFileDescriptor);
+        return;
+    }
+
+    req = ParseHttp(pointer);
+
+    if (!req)
+    {
+        fprintf(stderr, "%s\n", error);
+        close(clientSocketFileDescriptor);
+        return;
+    }
+
+    printf("'%s'\n'%s'\n", req->method, req->url);
+    free(req);
+    close(clientSocketFileDescriptor);
 
     return;
 }
 
 int main(int argc, char *argv[])
 {
-    int socketFileDescriptor, client;
+    int socketFileDescriptor, clientFileDescriptor;
     char *portNumber;
-    char *template;
-    httpReq *req;
-    char buffer[512];
 
-    template = "GET /Ciaone HTTP/1.1\n"
-               "Host : 127.0.0.1 : 8181\n"
-               "Upgrade-Insecure-Requests: 1\n"
-               "User - Agent : Mozilla / 5.0(X11; Ubuntu; Linux x86_64; rv : 136.0)Gecko / 20100101 Firefox / 136.0 \n"
-               "Accept : text / html, application / xhtml + xml, application / xml; q = 0.9, * /*;q=0.8\n"
-               "Accept-Language: it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3\n"
-               "Accept-Encoding: gzip, deflate, br, zstd\n"
-               "Connection: keep-alive\n"
-               "\n";
+    // char *template;
+    // httpReq *req;
+    // char buffer[512];
 
-    memset(buffer, 0, 512);
-    strncpy(buffer, template, 511);
+    // template = "GET /Ciaone HTTP/1.1\n"
+    //            "Host : 127.0.0.1 : 8181\n"
+    //            "Upgrade-Insecure-Requests: 1\n"
+    //            "User - Agent : Mozilla / 5.0(X11; Ubuntu; Linux x86_64; rv : 136.0)Gecko / 20100101 Firefox / 136.0 \n"
+    //            "Accept : text / html, application / xhtml + xml, application / xml; q = 0.9, * /*;q=0.8\n"
+    //            "Accept-Language: it-IT,it;q=0.8,en-US;q=0.5,en;q=0.3\n"
+    //            "Accept-Encoding: gzip, deflate, br, zstd\n"
+    //            "Connection: keep-alive\n"
+    //            "\n";
 
-    req = ParseHttp(buffer);
+    // memset(buffer, 0, 512);
+    // strncpy(buffer, template, 511);
 
-    if (!req)
-        fprintf(stderr, "%s\n", error);
-    else
-        printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
+    // req = ParseHttp(buffer);
 
-    free(req);
+    // if (!req)
+    //     fprintf(stderr, "%s\n", error);
+    // else
+    //     printf("Method: '%s'\n URL: '%s'\n", req->method, req->url);
 
-    return 0;
+    // free(req);
+
+    // return 0;
 
     if (argc < 2)
     {
@@ -179,8 +226,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        client = ClientAccept(socketFileDescriptor);
-        if (!client)
+        clientFileDescriptor = ClientAccept(socketFileDescriptor);
+
+        if (!clientFileDescriptor)
         {
             fprintf(stderr, "%s\n", error);
             continue;
@@ -190,7 +238,7 @@ int main(int argc, char *argv[])
 
         if (!fork())
         {
-            ClientConnection(socketFileDescriptor, client);
+            ClientConnection(socketFileDescriptor, clientFileDescriptor);
         }
 
         /*fork does create a copy of your program so it runs in two instances from here on and forward
