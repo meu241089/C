@@ -140,11 +140,51 @@ char *ClientRead(int clientSocketFileDescriptor)
     }
 }
 
+void HttpHeaders(int clientSocketFileDescriptor, int code)
+{
+    char buffer[512];
+    int number;
+
+    memset(buffer, 0, 512);
+    snprintf(buffer, 511, "HTTP/1.0 %d OK\n"
+                          "Server: httpd.c\n"
+                          "Cache-Control: no-store, no-cache, max-age=0, private\n"
+                          "Content-Type: text/html;\n"
+                          "Content-Language: en\n"
+                          "Expires: -1\n"
+                          "X-Frame-Options: SAMEORIGIN\n",
+             code);
+
+    number = strlen(buffer);
+    write(clientSocketFileDescriptor, buffer, number);
+
+    return;
+}
+
+void HttpResponse(int clientSocketFileDescriptor, char *contentType, char *data)
+{
+    char buffer[512];
+    int number;
+
+    number = strlen(data);
+
+    memset(buffer, 0, 512);
+    snprintf(buffer, 511, "Content-Type: %s;\n"
+                          "Content-Length: %d\n"
+                          "\n%s\n",
+             contentType, number, data);
+
+    number = strlen(buffer);
+    write(clientSocketFileDescriptor, buffer, number);
+
+    return;
+}
+
 void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescriptor)
 {
     httpReq *req;
-    char buffer[512];
     char *pointer;
+    char *res;
 
     pointer = ClientRead(clientSocketFileDescriptor);
 
@@ -164,7 +204,21 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
         return;
     }
 
-    printf("'%s'\n'%s'\n", req->method, req->url);
+    // printf("'%s'\n'%s'\n", req->method, req->url);
+
+    if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
+    {
+        res = "<html>Hello world!</html>";
+        HttpHeaders(clientSocketFileDescriptor, 200); // 200 = everything okay
+        HttpResponse(clientSocketFileDescriptor, "text/html", res);
+    }
+    else
+    {
+        res = "File not found";
+        HttpHeaders(clientSocketFileDescriptor, 404); // 404 = file not found
+        HttpResponse(clientSocketFileDescriptor, "text/plain", res);
+    }
+
     free(req);
     close(clientSocketFileDescriptor);
 
