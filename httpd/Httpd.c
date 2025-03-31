@@ -25,6 +25,15 @@ struct structHttpRequest
 
 typedef struct structHttpRequest httpReq;
 
+struct structFile
+{
+    char fileName[64];
+    char *fileContents;
+    int size;
+};
+
+typedef struct structFile File;
+
 /*returns 0 on error, or it return a socked fd*/
 int ServerInit(int portNumber)
 {
@@ -168,6 +177,8 @@ void HttpResponse(int clientSocketFileDescriptor, char *contentType, char *data)
 
     number = strlen(data);
 
+    /* if size is true, then size else strlen(data)*/
+
     memset(buffer, 0, 512);
     snprintf(buffer, 511, "Content-Type: %s;\n"
                           "Content-Length: %d\n"
@@ -178,6 +189,44 @@ void HttpResponse(int clientSocketFileDescriptor, char *contentType, char *data)
     write(clientSocketFileDescriptor, buffer, number);
 
     return;
+}
+
+/* 1 = everything okay, 0 on error */
+
+int SendFile(int clientSocketFileDescriptor, char *contentType, File *file)
+{
+    char buffer[512];
+    char *pointer;
+
+    int number, x;
+
+    if (!file)
+        return 0;
+
+    memset(buffer, 0, 512);
+    snprintf(buffer, 511, "Content-Type: %s;\n"
+                          "Content-Length: %d\n",
+             contentType, file->size);
+
+    number = file->size;
+    pointer = file->fileContents;
+
+    while (1)
+    {
+        x = write(clientSocketFileDescriptor, pointer, (number < 512) ? number : 512);
+
+        if (x < 1)
+            return 0;
+
+        number -= x;
+
+        if (number < 1)
+            break;
+        else
+            pointer += x;
+    }
+
+    return 1;
 }
 
 void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescriptor)
@@ -204,7 +253,9 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
         return;
     }
 
-    // printf("'%s'\n'%s'\n", req->method, req->url);
+    if (!strcmp(req->method, "GET") && !strcmp(req->url, "/img>/", 5))
+    {
+    }
 
     if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
     {
