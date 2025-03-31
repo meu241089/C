@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 // #define ListenAddress "0.0.0.0"
 #define ListenAddress "127.0.0.1"
@@ -191,8 +193,59 @@ void HttpResponse(int clientSocketFileDescriptor, char *contentType, char *data)
     return;
 }
 
-/* 1 = everything okay, 0 on error */
+/*return 0 on error, o a file structure*/
+File *ReadFile(char *fileName)
+{
+    char buffer[512];
+    char *pointer;
+    int n, x, fileDescriptor;
+    File *f;
 
+    fileDescriptor = open(fileName, O_RDONLY);
+    if (fileDescriptor < 0)
+        return 0;
+
+    f = malloc(sizeof(struct structFile));
+    if (!f)
+    {
+        close(fileDescriptor);
+        return 0;
+    }
+
+    strncpy(f->fileName, fileName, 63);
+    f->fileContents = malloc(512);
+
+    x = 0; /* x is number of bytes read*/
+    while (1)
+    {
+        memset(buffer, 0, 512);
+        n = read(fileDescriptor, buffer, 512);
+
+        if (!n)
+        {
+            break;
+        }
+        else if (x == -1)
+        {
+            close(fileDescriptor);
+            free(f->fileContents);
+            free(f);
+
+            return 0;
+        }
+
+        strncpy(buffer, (f->fileContents) + x, n);
+        x = +n;
+        f->fileContents = realloc(f->fileContents, (512 + x));
+    }
+
+    f->size = x;
+    close(fileDescriptor);
+
+    return f;
+}
+
+/* 1 = everything okay, 0 on error */
 int SendFile(int clientSocketFileDescriptor, char *contentType, File *file)
 {
     char buffer[512];
@@ -234,6 +287,8 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
     httpReq *req;
     char *pointer;
     char *res;
+    char str[96];
+    File *f;
 
     pointer = ClientRead(clientSocketFileDescriptor);
 
@@ -253,8 +308,13 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
         return;
     }
 
-    if (!strcmp(req->method, "GET") && !strcmp(req->url, "/img>/", 5))
+    /*TODO: improve security by checking for things like "../.." etc*/
+
+    if (!strcmp(req->method, "GET") && !strncmp(req->url, "/img>/", 5))
     {
+        memset(str, 0, 96);
+        snprintf(".%s", 95, req->url);
+        f = ReadFile(req->url);
     }
 
     if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
