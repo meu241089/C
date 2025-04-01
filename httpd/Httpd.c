@@ -314,9 +314,10 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
     if (!strcmp(req->method, "GET") && !strncmp(req->url, "/img>/", 5))
     {
         memset(str, 0, 96);
-        snprintf(".%s", 95, req->url);
-
-        f = ReadFile(req->url);
+        printf("Opening '%s'\n", req->url);
+        snprintf(str, 95, ".%s", req->url);
+        //printf("Opening '%s'\n", str);
+        f = ReadFile(str);
         if (!f)
         {
             res = "File not found";
@@ -338,7 +339,7 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
     if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
     {
         // res = "<html>Hello world!</html>";
-        res = "<html> <img src = 'img/test.png' alt = 'image'> </html>";
+        res = "<html> <img src = './img/test.png' alt = 'image'> </html>";
         HttpHeaders(clientSocketFileDescriptor, 200); // 200 = everything okay
         HttpResponse(clientSocketFileDescriptor, "text/html", res);
     }
