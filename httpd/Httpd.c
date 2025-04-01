@@ -235,7 +235,8 @@ File *ReadFile(char *fileName)
         }
 
         strncpy(buffer, (f->fileContents) + x, n);
-        x = +n;
+        // x = +n;
+        x += n;
         f->fileContents = realloc(f->fileContents, (512 + x));
     }
 
@@ -314,12 +315,30 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
     {
         memset(str, 0, 96);
         snprintf(".%s", 95, req->url);
+
         f = ReadFile(req->url);
+        if (!f)
+        {
+            res = "File not found";
+            HttpHeaders(clientSocketFileDescriptor, 404); // 404 = file not found
+            HttpResponse(clientSocketFileDescriptor, "text/plain", res);
+        }
+        else
+        {
+            HttpHeaders(clientSocketFileDescriptor, 200);
+            if (!SendFile(clientSocketFileDescriptor, "image/png", f))
+            {
+                res = "HTTP server error";
+                // HttpHeaders(clientSocketFileDescriptor, 500); // 500 = server error
+                HttpResponse(clientSocketFileDescriptor, "text/plain", res);
+            }
+        }
     }
 
     if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
     {
-        res = "<html>Hello world!</html>";
+        // res = "<html>Hello world!</html>";
+        res = "<html> <img src = 'img/test.png' alt = 'image'> </html>";
         HttpHeaders(clientSocketFileDescriptor, 200); // 200 = everything okay
         HttpResponse(clientSocketFileDescriptor, "text/html", res);
     }
