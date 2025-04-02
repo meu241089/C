@@ -235,7 +235,6 @@ File *ReadFile(char *fileName)
         }
 
         strncpy(buffer, (f->fileContents) + x, n);
-        // x = +n;
         x += n;
         f->fileContents = realloc(f->fileContents, (512 + x));
     }
@@ -311,12 +310,14 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
 
     /*TODO: improve security by checking for things like "../.." etc*/
 
-    if (!strcmp(req->method, "GET") && !strncmp(req->url, "/img>/", 5))
+    // printf("%s\n", req->method);
+    // printf("%s\n", req->url);
+
+    if (!strcmp(req->method, "GET") && !strncmp(req->url, "/img/", 5))
     {
         memset(str, 0, 96);
-        printf("Opening '%s'\n", req->url);
+        // printf("Opening '%s'\n", req->url);
         snprintf(str, 95, ".%s", req->url);
-        //printf("Opening '%s'\n", str);
         f = ReadFile(str);
         if (!f)
         {
@@ -339,14 +340,15 @@ void ClientConnection(int serverSocketFileDescriptor, int clientSocketFileDescri
     if (!strcmp(req->method, "GET") && !strcmp(req->url, "/app/webpage"))
     {
         // res = "<html>Hello world!</html>";
-        res = "<html> <img src = './img/test.png' alt = 'image'> </html>";
+        // res = "<html> <img src = '/home/gianluca/Scrivania/C/httpd/img/test.png' alt = 'image'> </html>";
+        res = "<html> <img src = 'img/test.png' alt = 'image'> </html>";
         HttpHeaders(clientSocketFileDescriptor, 200); // 200 = everything okay
         HttpResponse(clientSocketFileDescriptor, "text/html", res);
     }
     else
     {
         res = "File not found";
-        HttpHeaders(clientSocketFileDescriptor, 404); // 404 = file not found
+        HttpHeaders(clientSocketFileDescriptor, 504); // 404 = file not found
         HttpResponse(clientSocketFileDescriptor, "text/plain", res);
     }
 
