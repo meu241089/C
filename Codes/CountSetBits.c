@@ -1,5 +1,4 @@
 #include<stdio.h>
-#include<conio.h>
 
 int rem, binary = 0;
 unsigned int
