@@ -10,14 +10,28 @@ int main(void)
 {
 
     double celsius = 0;
+    double start = 0;
+    double end = 0;
+    double step = 0;
     double fahrenheit = 0;
 
-    printf("Enter Celsius temperature: ");
-    scanf("%lf", &celsius);
+    printf("Enter start celsius temperature: ");
+    scanf("%lf", &start);
 
-    fahrenheit = (celsius * 9 / 5) + 32;
+    printf("Enter end celsius temperature: ");
+    scanf("%lf", &end);
 
-    printf("Celsius: %.2lf -> Fahrenheit: %.2lf\n", celsius, fahrenheit);
+    printf("Enter step value: ");
+    scanf("%lf", &step);
+
+    printf("  Celsius  Fahrenheit\n");
+
+    for (celsius = start; celsius <= end; celsius += step)
+    {
+        fahrenheit = (celsius * 9 / 5) + 32;
+
+        printf("%8.2lf %8.2lf\n", celsius, fahrenheit);
+    }
 
     return 0;
 }
